@@ -1,26 +1,38 @@
 from pathlib import Path
+from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env")  # טוען משתני סביבה מקובץ .env (אם קיים)
 
+# ===== בסיסי =====
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-insecure-secret-key")
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 
+# ===== אפליקציות =====
 INSTALLED_APPS = [
+    # Django core
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # צד שלישי
     "rest_framework",
+    "rest_framework_simplejwt",
     "django_redis",
+
+    # שלך
+    "accounts",
+    "jobs",
     "market",
 ]
 
+# ===== מידלוורים =====
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -29,10 +41,13 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # אופציונלי (להפעיל כשתרצי):
+    # "accounts.middleware.ForceRoleSelectionMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
 
+# ===== טמפלטים =====
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -51,6 +66,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# ===== מסד נתונים =====
+# אם קיים DB_HOST -> PostgreSQL ; אחרת SQLite (פיתוח מקומי)
 if os.getenv("DB_HOST"):
     DATABASES = {
         "default": {
@@ -70,35 +87,67 @@ else:
         }
     }
 
-LANGUAGE_CODE = "en-us"
+# ===== משתמש מותאם =====
+AUTH_USER_MODEL = "accounts.User"
+
+# ===== ולידטור סיסמאות =====
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# ===== i18n =====
+LANGUAGE_CODE = "he"
 TIME_ZONE = "Asia/Jerusalem"
 USE_I18N = True
 USE_TZ = True
 
+# ===== סטטי/מדיה =====
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ===== Cache (Redis אופציונלי) =====
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/0"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }
 
+# ===== Django REST Framework =====
+# ברירת מחדל: דרוש JWT. ל־views ציבוריים אפשר להגדיר AllowAny מקומית.
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
 }
+
+# ===== SimpleJWT =====
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,  # אם מעבירים ל-True -> להוסיף token_blacklist ל-APPS
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+# ===== נתיבי התחברות (לממשק admin או HTML עתידי) =====
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# ===== אבטחה (פיתוח) =====
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
