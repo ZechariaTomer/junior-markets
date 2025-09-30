@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     # צד שלישי
     "rest_framework",
     "rest_framework_simplejwt",
-    "django_redis",
 
     # שלך
     "accounts",
@@ -66,6 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+print("DEBUG DB_HOST =", repr(os.getenv("DB_HOST")))
 # ===== מסד נתונים =====
 # אם קיים DB_HOST -> PostgreSQL ; אחרת SQLite (פיתוח מקומי)
 if os.getenv("DB_HOST"):
@@ -115,13 +115,33 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== Cache (Redis אופציונלי) =====
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/0"),
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+REDIS_URL = os.getenv("REDIS_URL")  # אם קיים – נשתמש ב-Redis
+USE_REDIS = False
+if REDIS_URL:
+    try:
+        import django_redis  # בודק שהחבילה מותקנת
+        USE_REDIS = True
+    except ImportError:
+        USE_REDIS = False
+
+if USE_REDIS:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        }
     }
-}
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-jm",
+        }
+    }
+    # במקומי אפשר להישאר עם ברירת המחדל של DB לסשנים
 
 # ===== Django REST Framework =====
 # ברירת מחדל: דרוש JWT. ל־views ציבוריים אפשר להגדיר AllowAny מקומית.

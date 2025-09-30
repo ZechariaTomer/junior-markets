@@ -1,57 +1,26 @@
-# Python
+﻿# Python / Django
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
-*.pyc
-*$py.class
 
-# Virtual Environment
+# Virtualenv
 .venv/
-venv/
-ENV/
 env/
-.venv.bak/
+venv/
 
-# Django
-*.log
-*.pot
-*.pyc
+# Django local artifacts
 db.sqlite3
-db.sqlite3-journal
 media/
 staticfiles/
-static/
-*.mo
 
-# VSCode / IDE
+# IDE / OS
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Environment Variables
-.env
-.env.local
-.env.*.local
-
-# Docker
-*.pid
-*.seed
-*.pid.lock
-docker-compose.override.yml
-
-# Node / React (אם יש לך client)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Cache
-.cache/
-coverage/
-htmlcov/
-
-# Mac / Windows
 .DS_Store
-Thumbs.db
+
+# Secrets / env
+.env
+.env.*
+
+# Local folders to ignore
+junior-markets/
