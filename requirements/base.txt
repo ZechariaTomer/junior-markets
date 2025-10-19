@@ -3,7 +3,13 @@ djangorestframework==3.15.2
 python-dotenv==1.0.1
 Pillow==11.0.0
 
-# Database + Cache
+# Database + Cache (רק psycopg3 - תומך ב-Python 3.13!)
 psycopg[binary]==3.2.3
 redis==5.0.1
 django-redis==5.4.0
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.1
+
+# CORS
+django-cors-headers==4.3.1
