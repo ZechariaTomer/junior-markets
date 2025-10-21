@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager  
 from django.core.validators import MinValueValidator, RegexValidator, URLValidator
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -14,14 +14,31 @@ class Roles(models.TextChoices):
     SEEKER = "SEEKER", _("מחפש עבודה")
     RECRUITER = "RECRUITER", _("מגייס")
 
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        return self.create_user(email, password, **extra_fields)
+
 class User(AbstractUser):
     email = models.EmailField(_("אימייל"), unique=True)
     role = models.CharField(_("תפקיד"), max_length=16, choices=Roles.choices, default=Roles.NONE)
 
-    USERNAME_FIELD = "email"       # התחברות עם אימייל
-    REQUIRED_FIELDS = []           # לא נבקש username בעת יצירה
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+    
+    objects = CustomUserManager() 
 
-    # גוזרים username מהאימייל לנוחות (שומר תאימות לאדמין)
     def save(self, *args, **kwargs):
         if not self.username and self.email:
             self.username = self.email.split("@")[0]
