@@ -126,4 +126,16 @@ class RecruiterProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-
+    
+# --- Current User ---
+class MeAPIView(generics.RetrieveAPIView):
+    """
+    מחזיר את המשתמש המחובר + הפרופיל שלו
+    GET /api/auth/me/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        from .serializers import UserSerializer
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)

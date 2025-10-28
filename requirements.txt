@@ -1,13 +1,17 @@
-# --- Core ---
-Django==4.2.24
+asgiref==3.9.2
+Django==5.1.2
+django-cors-headers==4.3.1
+django-redis==5.4.0
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
+pillow==11.0.0
+psycopg==3.2.3
+psycopg-binary==3.2.3
+PyJWT==2.10.1
 python-dotenv==1.0.1
-
-# --- Database drivers (choose by env) ---
-# SQLite מובנה, לא צריך חבילה
-psycopg2-binary==2.9.9    # נחוץ רק כשמשתמשים ב-PostgreSQL
-
-# --- Cache / Redis (אופציונלי; יעבוד אוטומטית אם REDIS_URL קיים) ---
-django-redis==5.4.0
-redis==5.0.8
+pytz==2025.2
+redis==5.0.1
+setuptools==80.9.0
+sqlparse==0.5.3
+tzdata==2025.2
+wheel==0.45.1
