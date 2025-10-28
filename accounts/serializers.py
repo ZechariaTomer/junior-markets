@@ -84,3 +84,21 @@ class RecruiterProfileSerializer(serializers.ModelSerializer):
             "company_location", "company_logo", "about_company", "notes", "updated_at",
         ]
 
+
+# -------- משתמש (חדש!) --------
+class UserSerializer(serializers.ModelSerializer):
+    """מחזיר מידע על המשתמש + הפרופיל שלו"""
+    seeker_profile = SeekerProfileSerializer(read_only=True)
+    recruiter_profile = RecruiterProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "role",
+            "date_joined",
+            "seeker_profile",    # אם SEEKER - יהיה מלא, אם RECRUITER - יהיה None
+            "recruiter_profile",  # אם RECRUITER - יהיה מלא, אם SEEKER - יהיה None
+        ]
+        read_only_fields = ["date_joined"]
