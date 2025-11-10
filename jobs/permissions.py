@@ -1,11 +1,15 @@
-
+# jobs/permissions.py
 from rest_framework.permissions import BasePermission
 from accounts.models import Roles
 
 
 class IsRecruiter(BasePermission):
-    """מאפשר רק למגייסים לפרסם או לערוך משרות"""
+    """
+    מאפשר רק למגייסים לפרסם או לערוך משרות.
+    Admin (is_staff/superuser) מקבל גישה מלאה.
+    """
 
+    @staticmethod
     def _is_admin(u):
         return getattr(u, "is_staff", False) or getattr(u, "is_superuser", False)
 
@@ -16,8 +20,12 @@ class IsRecruiter(BasePermission):
 
 
 class IsSeeker(BasePermission):
-    """מאפשר רק למחפשי עבודה להגיש מועמדות"""
+    """
+    מאפשר רק למחפשי עבודה להגיש מועמדות.
+    Admin (is_staff/superuser) מקבל גישה מלאה.
+    """
 
+    @staticmethod
     def _is_admin(u):
         return getattr(u, "is_staff", False) or getattr(u, "is_superuser", False)
 
@@ -28,8 +36,12 @@ class IsSeeker(BasePermission):
 
 
 class IsJobOwner(BasePermission):
-    """מאפשר למגייס לנהל רק משרות שהוא עצמו פרסם"""
+    """
+    מאפשר למגייס לנהל רק משרות שהוא עצמו פרסם.
+    Admin מקבל גישה לכל המשרות.
+    """
 
+    @staticmethod
     def _is_admin(u):
         return getattr(u, "is_staff", False) or getattr(u, "is_superuser", False)
 
@@ -43,16 +55,22 @@ class IsApplicationOwnerOrRecruiter(BasePermission):
     """
     למחפש עבודה → רואה/עורך רק את ההגשות שלו.
     למגייס → רואה את כל ההגשות למשרות שהוא פרסם.
+    Admin → יכול לגשת לכול.
     """
 
+    @staticmethod
     def _is_admin(u):
         return getattr(u, "is_staff", False) or getattr(u, "is_superuser", False)
 
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated:
+        user = request.user
+        if not user.is_authenticated:
             return False
-        if request.user.role == Roles.SEEKER:
-            return obj.applicant == request.user or self._is_admin(request.user)
-        if request.user.role == Roles.RECRUITER:
-            return obj.job.posted_by == request.user or self._is_admin(request.user)
-        return self._is_admin(request.user)
+
+        if user.role == Roles.SEEKER:
+            return obj.applicant == user or self._is_admin(user)
+
+        if user.role == Roles.RECRUITER:
+            return obj.job.posted_by == user or self._is_admin(user)
+
+        return self._is_admin(user)
